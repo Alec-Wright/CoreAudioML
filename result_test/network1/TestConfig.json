@@ -1,0 +1,1 @@
+{"unit_type": "LSTM", "hidden_size": 32, "in_size": 2, "out_size": 1, "num_layers": 1}
