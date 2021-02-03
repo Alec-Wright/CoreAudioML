@@ -1,7 +1,7 @@
 import dataset
 
 
-class Test_DataSet:
+class TestDataSet:
     def test_create_subset(self):
         test_dataset = dataset.DataSet('result_test/network1/')
         test_dataset.create_subset('train', frame_len=44100)

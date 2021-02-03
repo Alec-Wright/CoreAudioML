@@ -16,5 +16,9 @@ def json_save(data, file_name):
 
 
 def json_load(file_name):
-    with open(file_name + '.json') as fp:
-        return json.load(fp)
+    try:
+        with open(file_name) as fp:
+            return json.load(fp)
+    except FileNotFoundError:
+        with open(file_name + '.json') as fp:
+            return json.load(fp)
