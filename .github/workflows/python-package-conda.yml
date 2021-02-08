@@ -22,6 +22,7 @@ jobs:
       run: |
         conda create -n myenv python=3.8
         conda install pytorch torchvision torchaudio cpuonly -c pytorch
+        conda install -c anaconda scipy
     - name: Lint with flake8
       run: |
         conda install flake8
