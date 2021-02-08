@@ -1,129 +1,132 @@
 alabaster==0.7.12
 appdirs==1.4.4
 applaunchservices==0.2.1
-appnope @ file:///opt/concourse/worker/volumes/live/5f13e5b3-5355-4541-5fc3-f08850c73cf9/volume/appnope_1606859448618/work
+appnope==0.1.2
 argh==0.26.2
-astroid @ file:///opt/concourse/worker/volumes/live/21fd14a9-2a7e-484b-7394-5a9912cdcf80/volume/astroid_1592498459180/work
+astroid==2.4.2
 async-generator==1.10
 atomicwrites==1.4.0
-attrs @ file:///tmp/build/80754af9/attrs_1604765588209/work
-autopep8 @ file:///tmp/build/80754af9/autopep8_1596578164842/work
-Babel @ file:///tmp/build/80754af9/babel_1607110387436/work
+attrs==20.3.0
+autopep8==1.5.4
+Babel==2.9.0
 backcall==0.2.0
 black==19.10b0
-bleach @ file:///tmp/build/80754af9/bleach_1600439572647/work
+bleach==3.2.1
 brotlipy==0.7.0
 certifi==2020.12.5
-cffi @ file:///opt/concourse/worker/volumes/live/730e9a28-66f9-4e03-51ad-252ec8e40d81/volume/cffi_1606255126408/work
-chardet @ file:///opt/concourse/worker/volumes/live/c798b2ee-88b1-4341-6830-161a92c2399e/volume/chardet_1607706832595/work
+cffi==1.14.4
+chardet==4.0.0
 click==7.1.2
-cloudpickle @ file:///tmp/build/80754af9/cloudpickle_1598884132938/work
-colorama @ file:///tmp/build/80754af9/colorama_1607707115595/work
-cryptography @ file:///opt/concourse/worker/volumes/live/27753773-e292-4a76-405d-313f3647b99f/volume/cryptography_1607636767414/work
+cloudpickle==1.6.0
+colorama==0.4.4
+cryptography==3.3.1
 decorator==4.4.2
 defusedxml==0.6.0
-diff-match-patch @ file:///tmp/build/80754af9/diff-match-patch_1594828741838/work
+diff-match-patch==20200713
 docutils==0.16
 entrypoints==0.3
-flake8 @ file:///tmp/build/80754af9/flake8_1601911421857/work
+flake8==3.8.4
 future==0.18.2
-idna @ file:///tmp/build/80754af9/idna_1593446292537/work
+idna==2.10
 imagesize==1.2.0
-importlib-metadata @ file:///tmp/build/80754af9/importlib-metadata_1602276842396/work
-iniconfig @ file:///home/linux1/recipes/ci/iniconfig_1610983019677/work
-intervaltree @ file:///tmp/build/80754af9/intervaltree_1598376443606/work
-ipykernel @ file:///opt/concourse/worker/volumes/live/88f541d3-5a27-498f-7391-f2e50ca36560/volume/ipykernel_1596206680118/work/dist/ipykernel-5.3.4-py3-none-any.whl
-ipython @ file:///opt/concourse/worker/volumes/live/26969e8f-c9f7-42dc-6ffb-b3effd424c49/volume/ipython_1604101242376/work
-ipython-genutils @ file:///tmp/build/80754af9/ipython_genutils_1606773439826/work
-isort @ file:///tmp/build/80754af9/isort_1602603989581/work
-jedi @ file:///opt/concourse/worker/volumes/live/12a2c347-a8e4-4b62-5b19-dcc92a2254f6/volume/jedi_1606932552286/work
+importlib-metadata==2.0.0
+iniconfig==1.1.1
+intervaltree==3.1.0
+ipykernel==5.3.4
+ipython==7.19.0
+ipython-genutils==0.2.0
+isort==5.6.4
+jedi==0.17.2
 Jinja2==2.11.2
-jsonschema @ file:///tmp/build/80754af9/jsonschema_1602607155483/work
-jupyter-client @ file:///tmp/build/80754af9/jupyter_client_1601311786391/work
-jupyter-core @ file:///opt/concourse/worker/volumes/live/e8302867-5dbe-440b-7a37-f61bacc38ed8/volume/jupyter_core_1606148993907/work
-jupyterlab-pygments @ file:///tmp/build/80754af9/jupyterlab_pygments_1601490720602/work
-keyring @ file:///opt/concourse/worker/volumes/live/4b64160c-5883-473f-7e72-b24b04c653c1/volume/keyring_1609353655294/work
-lazy-object-proxy @ file:///opt/concourse/worker/volumes/live/4edac9a2-4df2-4a26-4521-3cf6eec3d38c/volume/lazy-object-proxy_1607707342845/work
-MarkupSafe @ file:///opt/concourse/worker/volumes/live/cb778296-98db-45ad-411e-6f726e102dc3/volume/markupsafe_1594371638608/work
+jsonschema==3.2.0
+jupyter-client==6.1.7
+jupyter-core==4.7.0
+jupyterlab-pygments==0.1.2
+keyring==21.8.0
+lazy-object-proxy==1.4.3
+MarkupSafe==1.1.1
 mccabe==0.6.1
-mistune @ file:///opt/concourse/worker/volumes/live/95802d64-d39c-491b-74ce-b9326880ca54/volume/mistune_1594373201816/work
+mistune==0.8.4
 mkl-fft==1.2.0
 mkl-random==1.1.1
 mkl-service==2.3.0
-more-itertools @ file:///tmp/build/80754af9/more-itertools_1605111547926/work
+more-itertools==8.6.0
 mypy-extensions==0.4.3
-nbclient @ file:///tmp/build/80754af9/nbclient_1602783176460/work
-nbconvert @ file:///opt/concourse/worker/volumes/live/2b9c1d93-d0fd-432f-7d93-66c93d81b614/volume/nbconvert_1601914875037/work
-nbformat @ file:///tmp/build/80754af9/nbformat_1602783287752/work
-nest-asyncio @ file:///tmp/build/80754af9/nest-asyncio_1606153767164/work
-numpy @ file:///opt/concourse/worker/volumes/live/5572694e-967a-4c0c-52cf-b53d43e72de9/volume/numpy_and_numpy_base_1603491881791/work
-numpydoc @ file:///tmp/build/80754af9/numpydoc_1605117425582/work
-packaging @ file:///tmp/build/80754af9/packaging_1607971725249/work
-pandocfilters @ file:///opt/concourse/worker/volumes/live/c330e404-216d-466b-5327-8ce8fe854d3a/volume/pandocfilters_1605120442288/work
+nbclient==0.5.1
+nbconvert==6.0.7
+nbformat==5.0.8
+nest-asyncio==1.4.3
+numpy==1.19.2
+numpydoc==1.1.0
+packaging==20.8
+pandocfilters==1.4.3
 parso==0.7.0
 pathspec==0.7.0
 pathtools==0.1.2
-pexpect @ file:///tmp/build/80754af9/pexpect_1605563209008/work
-pickleshare @ file:///tmp/build/80754af9/pickleshare_1606932040724/work
+pexpect==4.8.0
+pickleshare==0.7.5
+pip==20.3.3
 pluggy==0.13.1
-prompt-toolkit @ file:///tmp/build/80754af9/prompt-toolkit_1602688806899/work
-psutil @ file:///opt/concourse/worker/volumes/live/ff72f822-991c-4030-4f3a-8c41d3ac4e4f/volume/psutil_1598370232375/work
-ptyprocess @ file:///tmp/build/80754af9/ptyprocess_1609355006118/work/dist/ptyprocess-0.7.0-py2.py3-none-any.whl
-py @ file:///tmp/build/80754af9/py_1607971587848/work
+prompt-toolkit==3.0.8
+psutil==5.7.2
+ptyprocess==0.7.0
+py==1.10.0
 pycodestyle==2.6.0
-pycparser @ file:///tmp/build/80754af9/pycparser_1594388511720/work
-pydocstyle @ file:///tmp/build/80754af9/pydocstyle_1598885001695/work
+pycparser==2.20
+pydocstyle==5.1.1
 pyflakes==2.2.0
-Pygments @ file:///tmp/build/80754af9/pygments_1607368905949/work
-pylint @ file:///opt/concourse/worker/volumes/live/ed0164b6-bcc7-4f6b-7dd4-ad89660b5dcb/volume/pylint_1598624018129/work
-pyls-black @ file:///tmp/build/80754af9/pyls-black_1607553132291/work
-pyls-spyder @ file:///tmp/build/80754af9/pyls-spyder_1608134179673/work
-pyOpenSSL @ file:///tmp/build/80754af9/pyopenssl_1608057966937/work
+Pygments==2.7.3
+pylint==2.6.0
+pyls-black==0.4.6
+pyls-spyder==0.3.0
+pyOpenSSL==20.0.1
 pyparsing==2.4.7
-pyrsistent @ file:///opt/concourse/worker/volumes/live/ff11f3f0-615b-4508-471d-4d9f19fa6657/volume/pyrsistent_1600141727281/work
-PySocks @ file:///opt/concourse/worker/volumes/live/85a5b906-0e08-41d9-6f59-084cee4e9492/volume/pysocks_1594394636991/work
+pyrsistent==0.17.3
+PySocks==1.7.1
 pytest==6.2.2
 python-dateutil==2.8.1
-python-jsonrpc-server @ file:///tmp/build/80754af9/python-jsonrpc-server_1600278539111/work
-python-language-server @ file:///tmp/build/80754af9/python-language-server_1607972495879/work
-pytz @ file:///tmp/build/80754af9/pytz_1608922264688/work
+python-jsonrpc-server==0.4.0
+python-language-server==0.36.2
+pytz==2020.5
 PyYAML==5.3.1
 pyzmq==20.0.0
 QDarkStyle==2.8.1
-QtAwesome @ file:///tmp/build/80754af9/qtawesome_1602272867890/work
-qtconsole @ file:///tmp/build/80754af9/qtconsole_1600870028330/work
+QtAwesome==1.0.1
+qtconsole==4.7.7
 QtPy==1.9.0
-regex @ file:///opt/concourse/worker/volumes/live/c84a6349-3315-46e4-634b-b5582dea058b/volume/regex_1606691109605/work
-requests @ file:///tmp/build/80754af9/requests_1608241421344/work
-rope @ file:///tmp/build/80754af9/rope_1602264064449/work
+regex==2020.11.13
+requests==2.25.1
+rope==0.18.0
 Rtree==0.9.4
-scipy @ file:///opt/concourse/worker/volumes/live/851446f6-a052-41c4-4243-67bb78999b49/volume/scipy_1604596178167/work
-six @ file:///opt/concourse/worker/volumes/live/5b31cb27-1e37-4ca5-6e9f-86246eb206d2/volume/six_1605205320872/work
+scipy==1.5.2
+setuptools==51.1.2.post20210110
+six==1.15.0
 snowballstemmer==2.0.0
-sortedcontainers @ file:///tmp/build/80754af9/sortedcontainers_1606865132123/work
-Sphinx @ file:///tmp/build/80754af9/sphinx_1610133430332/work
+sortedcontainers==2.3.0
+Sphinx==3.4.3
 sphinxcontrib-applehelp==1.0.2
 sphinxcontrib-devhelp==1.0.2
 sphinxcontrib-htmlhelp==1.0.3
 sphinxcontrib-jsmath==1.0.1
 sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.4
-spyder @ file:///opt/concourse/worker/volumes/live/4cd2785b-2e47-41ea-6cf3-3c3603232cc9/volume/spyder_1607704268636/work
-spyder-kernels @ file:///opt/concourse/worker/volumes/live/7c9c73e2-5880-4362-7070-db12e0b89ed1/volume/spyder-kernels_1608578785269/work
+spyder==4.2.0
+spyder-kernels==1.10.1
 testpath==0.4.4
-three-merge @ file:///tmp/build/80754af9/three-merge_1607553261110/work
-toml @ file:///tmp/build/80754af9/toml_1592853716807/work
-torch @ file:///opt/concourse/worker/volumes/live/f1ad46c0-b0e0-4a2c-42b1-36c80dc13116/volume/pytorch_1596288435440/work
-tornado @ file:///opt/concourse/worker/volumes/live/05341796-4198-4ded-4a9a-332fde3cdfd1/volume/tornado_1606942323372/work
-traitlets @ file:///tmp/build/80754af9/traitlets_1602787416690/work
-typed-ast @ file:///opt/concourse/worker/volumes/live/64f87731-9fe3-4a9f-799f-07080cd51a6e/volume/typed-ast_1610393095105/work
-typing-extensions @ file:///tmp/build/80754af9/typing_extensions_1598376058250/work
-ujson @ file:///opt/concourse/worker/volumes/live/2fc9988c-ebca-4577-6c4b-7383ea76e8ee/volume/ujson_1602523306974/work
-urllib3 @ file:///tmp/build/80754af9/urllib3_1606938623459/work
-watchdog @ file:///opt/concourse/worker/volumes/live/4178155f-7c31-4cf0-463c-13c24817f979/volume/watchdog_1606939125879/work
-wcwidth @ file:///tmp/build/80754af9/wcwidth_1593447189090/work
+three-merge==0.1.1
+toml==0.10.1
+torch==1.6.0
+tornado==6.1
+traitlets==5.0.5
+typed-ast==1.4.2
+typing-extensions==3.7.4.3
+ujson==4.0.1
+urllib3==1.26.2
+watchdog==0.10.4
+wcwidth==0.2.5
 webencodings==0.5.1
-wrapt @ file:///opt/concourse/worker/volumes/live/4fd63656-ef78-4d7f-42f4-6ab83f3ac507/volume/wrapt_1607712512486/work
-wurlitzer @ file:///opt/concourse/worker/volumes/live/01a17f3d-eafe-4806-57a1-4b9ef5d1815f/volume/wurlitzer_1594753845129/work
-yapf @ file:///tmp/build/80754af9/yapf_1593528177422/work
-zipp @ file:///tmp/build/80754af9/zipp_1604001098328/work
+wheel==0.36.2
+wrapt==1.11.2
+wurlitzer==2.0.1
+yapf==0.30.0
+zipp==3.4.0
