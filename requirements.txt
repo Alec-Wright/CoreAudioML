@@ -47,7 +47,7 @@ lazy-object-proxy==1.4.3
 MarkupSafe==1.1.1
 mccabe==0.6.1
 mistune==0.8.4
-mkl-fft==1.2.0
+mkl-fft==1.0.6
 mkl-random==1.1.1
 mkl-service==2.3.0
 more-itertools==8.6.0
