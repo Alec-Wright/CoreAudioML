@@ -13,8 +13,10 @@ def wrapper(func, kwargs):
 # params is a dict that holds 'meta parameters' for the whole network
 # skip inserts a skip connection from the input to the output, the value of skip determines how many of the input
 # channels to add to the output (if skip = 2, for example, the output must have at least two channels)
+
+# e.g blocks = {'block_type': 'RNN', 'input_size': 1, 'output_size': 1, 'hidden_size': 16}
 class RecNet(nn.Module):
-    def __init__(self, blocks=[{'block_type': 'RNN', 'input_size': 1, 'output_size': 1, 'hidden_size': 16}],
+    def __init__(self, blocks=None,
                  skip=0):
         super(RecNet, self).__init__()
         if type(blocks) == dict:

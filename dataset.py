@@ -4,6 +4,7 @@ import torch
 import math
 import warnings
 
+
 # Function converting np read audio to range of -1 to +1
 def audio_converter(audio):
     if audio.dtype == 'int16':
@@ -18,9 +19,9 @@ def audio_splitter(audio, split_markers):
     assert sum(split_markers) <= 1.0
     if sum(split_markers) < 0.999:
         warnings.warn("sum of split markers is less than 1, so not all audio will be included in dataset")
-
     start = 0
     slices = []
+    # convert split markers to samples
     split_bounds = [int(x * audio.shape[0]) for x in split_markers]
     for n in split_bounds:
         end = start + n
@@ -29,53 +30,67 @@ def audio_splitter(audio, split_markers):
     return slices
 
 
-# converts continuous audio into frames, and creates a torch tensor from them
+# converts numpy audio into frames, and creates a torch tensor from them, frame_len = 0 just converts to a torch tensor
 def framify(audio, frame_len):
+    # If audio is mono, add a dummy dimension, so the same operations can be applied to mono/multichannel audio
     audio = np.expand_dims(audio, 1) if len(audio.shape) == 1 else audio
-    # Calculate the number of segments the training data will be split into
+    # Calculate the number of segments the training data will be split into in frame_len is not 0
     seg_num = math.floor(audio.shape[0] / frame_len) if frame_len else 1
+    # If no frame_len is provided, set frame_len to be equal to length of the input audio
     frame_len = audio.shape[0] if not frame_len else frame_len
     # Find the number of channels
     channels = audio.shape[1]
     # Initialise tensor matrices
     dataset = torch.empty((frame_len, seg_num, channels))
-
     # Load the audio for the training set
     for i in range(seg_num):
         dataset[:, i, :] = torch.from_numpy(audio[i * frame_len:(i + 1) * frame_len, :])
-
     return dataset
 
 
+"""This is the main DataSet class, it can hold any number of subsets, which could be, e.g, the training/test/val sets.
+The subsets are created by the create_subset method and stored in the DataSet.subsets dictionary. 
+
+datadir: is the default location where the DataSet instance will look when told to load an audio file
+extensions: is the default ends of the paired data files, when using paired data, so by default when loading the file
+ 'wicked_guitar', the load_file method with look for 'wicked_guitar-input.wav' and 'wicked_guitar-target.wav'
+ to disable this behaviour, enter extensions = '', or None, or anything that evaluates to false in python """
+
+
 class DataSet:
-    def __init__(self, datadir='../Dataset/', extensions=('input', 'target')):
+    def __init__(self, data_dir='../Dataset/', extensions=('input', 'target')):
         self.extensions = extensions if extensions else ['']
         self.subsets = {}
-        assert type(datadir) == str, "datadir should be string,not %r" %{type(datadir)}
-        self.datadir = datadir
+        assert type(data_dir) == str, "data_dir should be string,not %r" % {type(data_dir)}
+        self.data_dir = data_dir
 
-    # Desired frame_len is given in seconds, or 0 for just one long frame
+    # add a subset called 'name', desired 'frame_len' is given in seconds, or 0 for just one long frame
     def create_subset(self, name, frame_len=0):
         assert type(name) == str, "data subset name must be a string, not %r" %{type(name)}
         assert not (name in self.subsets), "subset %r already exists" %name
         self.subsets[name] = SubSet(frame_len)
 
+    # load a file of 'filename' into existing subset/s 'set_names', split fractionally as specified by 'splits',
+    # if 'cond_val' is provided the conditioning value will be saved along with the frames of the loaded data
     def load_file(self, filename, set_names='train', splits=None, cond_val=None):
         # Assertions and checks
-        if type(set_names) == str: set_names = [set_names]
+        if type(set_names) == str:
+            set_names = [set_names]
         assert len(set_names) == 1 or len(set_names) == len(splits), "number of subset names must equal number of " \
                                                                      "split markers"
-        assert [self.subsets.get(each) for each in set_names], "set_names contains subsets that haven't been created yet"
+        assert [self.subsets.get(each) for each in set_names], "set_names contains subsets that don't exist yet"
 
-        # Actually doing something
+        # Load each of the 'extensions'
         for i, ext in enumerate(self.extensions):
             try:
-                np_data = wavfile.read(self.datadir + filename + '-' + ext + '.wav')
+                np_data = wavfile.read(self.data_dir + filename + '-' + ext + '.wav')
             except FileNotFoundError:
-                np_data = wavfile.read(self.datadir + filename + ext + '.wav')
+                np_data = wavfile.read(self.data_dir + filename + ext + '.wav')
             except FileNotFoundError:
-                print(["File Not Found At: " + self.datadir + filename])
+                print(["File Not Found At: " + self.data_dir + filename])
+                return
             raw_audio = audio_converter(np_data[1])
+            # Split the audio if the set_names were provided
             if len(set_names) > 1:
                 raw_audio = audio_splitter(raw_audio, splits)
                 for n, sets in enumerate(set_names):
@@ -94,21 +109,27 @@ class SubSet:
         self.conditioning = None
         self.fs = None
 
+    # Add 'audio' data, in the data dictionary at the key 'ext', if cond_val is provided save the cond_val of each frame
     def add_data(self, fs, audio, ext, cond_val):
-        if not self.fs: self.fs = fs
+        if not self.fs:
+            self.fs = fs
         assert self.fs == fs, "data with different sample rate provided to subset"
+        # if no 'ext' is provided, all the subsets data will be stored at the 'data' key of the 'data' dict
         ext = 'data' if not ext else ext
-
+        # Frame the data and optionally create a tensor of the conditioning values of each frame
         framed_data = framify(audio, self.frame_len)
         cond_data = cond_val * torch.ones(framed_data.shape[1]) if isinstance(cond_val, (float, int)) else None
 
         try:
+            # Convert data from tuple to list and concatenate new data onto the data tensor
             data = list(self.data[ext])
             self.data[ext] = (torch.cat((data[0], framed_data), 1),)
+            # If cond_val is provided add it to the cond_val tensor, note all frames or no frames must have cond vals
             if isinstance(cond_val, (float, int)):
-                assert torch.is_tensor(self.cond_data[ext][0]), 'cond val provided, but previous data has no conditioning val'
+                assert torch.is_tensor(self.cond_data[ext][0]), 'cond val provided, but previous data has no cond val'
                 c_data = list(self.cond_data[ext])
                 self.cond_data[ext] = (torch.cat((c_data[0], cond_data), 0),)
+        # If this is the first data to be loaded into the subset, create the data and cond_data tuples
         except KeyError:
             self.data[ext] = (framed_data,)
             self.cond_data[ext] = (cond_data,)

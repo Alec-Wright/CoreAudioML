@@ -1,7 +1,9 @@
 import networks
+import dataset
 import torch
 import os
 import miscfuncs
+import training
 
 
 def run_net(network):
@@ -35,7 +37,8 @@ class TestRecNet:
         network3 = networks.RecNet([block_params4, block_params5])
         run_net(network3)
 
-        network4 = networks.RecNet(skip=1)
+        network4 = networks.RecNet({'block_type': 'RNN', 'input_size': 4, 'output_size': 8, 'hidden_size': 8, 'skip':0},
+                                   skip=1)
         run_net(network4)
 
     def test_detach_hidden(self):
@@ -90,4 +93,20 @@ class TestRecNet:
         model_data = networks.legacy_load(network_params)
 
         network = networks.load_model(model_data)
+
+        data = dataset.DataSet('result_test/network1/')
+        data.create_subset('test', 0)
+        data.load_file('KDonnerFlangerra12c12rg9Singles1', set_names='test')
+
+        # At the moment the example tloss file is actually empty, I'll assume if the loss is small the model loaded ok..
+        with open('result_test/network1/tloss.txt') as fp:
+            x = fp.read()
+        with torch.no_grad():
+            output = network(data.subsets['test'].data['input'][0])
+            loss_fcn = training.ESRLoss()
+
+            loss = loss_fcn(output, data.subsets['test'].data['target'][0])
+            assert loss.item() < 0.05
+
+
 

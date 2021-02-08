@@ -17,6 +17,8 @@ class TestDataSet:
         test_dataset2.load_file('KDonnerFlangerra12c12rg9Singles1-input')
         test_dataset2.load_file('KDonnerFlangerra12c12rg9Singles1-input', ['train', 'val', 'test'],
                                 [0.75, 0.125, 0.125])
+        test_dataset2.load_file('KDonnerFlangerra12c12rg9Singles1-input', ['train', 'val', 'test'],
+                                [0.75, 0.125, 0.125])
 
         test_dataset3 = dataset.DataSet('result_test/network1/', extensions=None)
         test_dataset3.create_subset('train', frame_len=44100)
