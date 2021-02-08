@@ -4,7 +4,7 @@ on: [push]
 
 jobs:
   build-mac:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     strategy:
       max-parallel: 5
 
@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: |
         conda create -n myenv python=3.8
-        conda install pytorch torchvision torchaudio -c pytorch
+        conda install pytorch torchvision torchaudio cpuonly -c pytorch
     - name: Lint with flake8
       run: |
         conda install flake8
