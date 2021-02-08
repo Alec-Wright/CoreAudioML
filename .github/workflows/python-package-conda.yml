@@ -20,7 +20,8 @@ jobs:
         echo $CONDA/bin >> $GITHUB_PATH
     - name: Install dependencies
       run: |
-        conda install --name base --file spec-file.txt
+        conda create -n myenv python=3.8
+        conda install pytorch torchvision torchaudio -c pytorch
     - name: Lint with flake8
       run: |
         conda install flake8
