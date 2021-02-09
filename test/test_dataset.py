@@ -4,7 +4,7 @@ import os
 
 class TestDataSet:
     def test_create_subset(self):
-        data_path = os.path.join('result_test', 'network1')
+        data_path = os.path.join('..', 'result_test', 'network1')
         test_dataset = dataset.DataSet(data_path)
         test_dataset.create_subset('train', frame_len=44100)
         test_dataset.create_subset('val')
