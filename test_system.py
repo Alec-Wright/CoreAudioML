@@ -1,7 +1,7 @@
 import dataset
 import training
 import networks
-import miscfuncs
+import os
 import torch
 import math
 import numpy as np
@@ -11,7 +11,7 @@ def test_system():
     network = networks.RecNet()
     network.add_layer({'block_type': 'GRU', 'input_size': 2, 'output_size': 1, 'hidden_size': 16})
 
-    data = dataset.DataSet('../result_test/network1/')
+    data = dataset.DataSet(os.path.join('result_test', 'network1'))
     data.create_subset('train', 8820)
     data.load_file('KDonnerFlangerra12c12rg9Singles1', set_names='train')
 

@@ -72,41 +72,41 @@ class TestRecNet:
         network.save_model('TestModel_Stateful', 'test_model')
 
         del network
-        model_data1 = miscfuncs.json_load('test_model/' + 'TestModel_Stateful')
+        model_data1 = miscfuncs.json_load(os.path.join('test_model', 'TestModel_Stateful'))
         network = networks.load_model(model_data1)
         output2 = network(torch.ones([100, 10, network.input_size]))
         assert torch.all(torch.eq(output1, output2))
 
         del network
-        model_data2 = miscfuncs.json_load('test_model/' + 'TestModel_Stateless')
+        model_data2 = miscfuncs.json_load(os.path.join('test_model', 'TestModel_Stateless'))
         network = networks.load_model(model_data2)
         output3 = network(torch.ones([100, 10, network.input_size]))
         assert not torch.all(torch.eq(output1, output3))
 
-        os.remove("test_model/TestModel_Stateful.json")
-        os.remove("test_model/TestModel_Stateless.json")
+        os.remove(os.path.join("test_model", "TestModel_Stateful.json"))
+        os.remove(os.path.join("test_model", "TestModel_Stateless.json"))
         os.rmdir('test_model')
 
     def test_network_loading(self):
-        network_params = miscfuncs.json_load('../result_test/network1/config.json')
-        network_params['state_dict'] = torch.load('../result_test/network1/modelBest.pt', map_location=torch.device('cpu'))
+        network_params = miscfuncs.json_load(os.path.join('result_test', 'network1', 'config.json'))
+        network_params['state_dict'] = torch.load(os.path.join('result_test', 'network1', 'modelBest.pt'),
+                                                  map_location=torch.device('cpu'))
         model_data = networks.legacy_load(network_params)
 
         network = networks.load_model(model_data)
 
-        data = dataset.DataSet('../result_test/network1/')
+        data = dataset.DataSet(os.path.join('result_test', 'network1'))
         data.create_subset('test', 0)
         data.load_file('KDonnerFlangerra12c12rg9Singles1', set_names='test')
 
-        # At the moment the example tloss file is actually empty, I'll assume if the loss is small the model loaded ok..
-        with open('../result_test/network1/tloss.txt') as fp:
+        with open(os.path.join('result_test', 'network1', 'tloss.txt')) as fp:
             x = fp.read()
         with torch.no_grad():
             output = network(data.subsets['test'].data['input'][0])
             loss_fcn = training.ESRLoss()
 
             loss = loss_fcn(output, data.subsets['test'].data['target'][0])
-            assert loss.item() < 0.05
+            assert abs(loss.item() - float(x[1:-1])) < 1e-5
 
 
 

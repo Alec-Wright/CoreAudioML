@@ -3,6 +3,7 @@ from scipy.io import wavfile
 import torch
 import math
 import warnings
+import os
 
 
 # Function converting np read audio to range of -1 to +1
@@ -83,9 +84,9 @@ class DataSet:
         # Load each of the 'extensions'
         for i, ext in enumerate(self.extensions):
             try:
-                np_data = wavfile.read(self.data_dir + filename + '-' + ext + '.wav')
+                np_data = wavfile.read(os.path.join(self.data_dir, filename + '-' + ext + '.wav'))
             except FileNotFoundError:
-                np_data = wavfile.read(self.data_dir + filename + ext + '.wav')
+                np_data = wavfile.read(os.path.join(self.data_dir, filename + ext + '.wav'))
             except FileNotFoundError:
                 print(["File Not Found At: " + self.data_dir + filename])
                 return
