@@ -88,18 +88,18 @@ class TestRecNet:
         os.rmdir('test_model')
 
     def test_network_loading(self):
-        network_params = miscfuncs.json_load('result_test/network1/config.json')
-        network_params['state_dict'] = torch.load('result_test/network1/modelBest.pt', map_location=torch.device('cpu'))
+        network_params = miscfuncs.json_load('../result_test/network1/config.json')
+        network_params['state_dict'] = torch.load('../result_test/network1/modelBest.pt', map_location=torch.device('cpu'))
         model_data = networks.legacy_load(network_params)
 
         network = networks.load_model(model_data)
 
-        data = dataset.DataSet('result_test/network1/')
+        data = dataset.DataSet('../result_test/network1/')
         data.create_subset('test', 0)
         data.load_file('KDonnerFlangerra12c12rg9Singles1', set_names='test')
 
         # At the moment the example tloss file is actually empty, I'll assume if the loss is small the model loaded ok..
-        with open('result_test/network1/tloss.txt') as fp:
+        with open('../result_test/network1/tloss.txt') as fp:
             x = fp.read()
         with torch.no_grad():
             output = network(data.subsets['test'].data['input'][0])
