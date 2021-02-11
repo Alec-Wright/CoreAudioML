@@ -1,6 +1,6 @@
-import dataset
-import training
-import networks
+import CoreAudioML.dataset as dataset
+import CoreAudioML.training as training
+import CoreAudioML.networks as networks
 import os
 import torch
 import math

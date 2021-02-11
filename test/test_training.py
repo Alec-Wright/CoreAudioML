@@ -1,4 +1,4 @@
-import training
+import CoreAudioML.training as training
 import torch
 
 

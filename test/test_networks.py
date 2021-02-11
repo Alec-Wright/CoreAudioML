@@ -1,9 +1,9 @@
-import networks
-import dataset
+import CoreAudioML.networks as networks
+import CoreAudioML.dataset as dataset
 import torch
 import os
 import miscfuncs
-import training
+import CoreAudioML.training as training
 
 
 def run_net(network):
