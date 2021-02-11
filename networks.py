@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-import miscfuncs
+import CoreAudioML.miscfuncs as miscfuncs
 
 
 def wrapper(func, kwargs):
