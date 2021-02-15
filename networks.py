@@ -92,9 +92,9 @@ class BasicRNNBlock(nn.Module):
         rec_params = {i: params[i] for i in params if i in ['input_size', 'hidden_size', 'num_layers']}
         self.params = params
         self.rec = wrapper(getattr(nn, params['block_type']), rec_params)
-        self.lin = nn.Linear(params['hidden_size'], params['output_size'], bias=False)
-        if 'lin_bias' in params:
-            self.lin.bias = params['lin_bias']
+        self.lin_bias = params['lin_bias'] if 'lin_bias' in params else False
+        self.lin = nn.Linear(params['hidden_size'], params['output_size'], self.lin_bias)
+
         self.hidden = None
         if 'skip' in params:
             self.skip = params['skip']
