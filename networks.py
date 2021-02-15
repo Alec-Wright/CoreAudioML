@@ -16,8 +16,7 @@ def wrapper(func, kwargs):
 
 # e.g blocks = {'block_type': 'RNN', 'input_size': 1, 'output_size': 1, 'hidden_size': 16}
 class RecNet(nn.Module):
-    def __init__(self, blocks=None,
-                 skip=0):
+    def __init__(self, blocks=None, skip=0):
         super(RecNet, self).__init__()
         if type(blocks) == dict:
             blocks = [blocks]
@@ -94,6 +93,8 @@ class BasicRNNBlock(nn.Module):
         self.params = params
         self.rec = wrapper(getattr(nn, params['block_type']), rec_params)
         self.lin = nn.Linear(params['hidden_size'], params['output_size'], bias=False)
+        if 'lin_bias' in params:
+            self.lin.bias = params['lin_bias']
         self.hidden = None
         if 'skip' in params:
             self.skip = params['skip']
@@ -145,10 +146,10 @@ def legacy_load(legacy_data):
     if legacy_data['unit_type'] == 'GRU' or legacy_data['unit_type'] == 'LSTM':
         model_data = {'model_data': {'model': 'RecNet', 'skip': 0}, 'blocks': {}}
         model_data['blocks']['0'] = {'block_type': legacy_data['unit_type'], 'input_size': legacy_data['in_size'],
-                                     'hidden_size': legacy_data['hidden_size'],'output_size': 1}
+                                     'hidden_size': legacy_data['hidden_size'],'output_size': 1, 'lin_bias': True}
         if legacy_data['cur_epoch']:
             training_info = {'current_epoch': legacy_data['cur_epoch'], 'training_losses': legacy_data['tloss_list'],
-                             'val_losses': legacy_data['vloss_list'], 'load_config': 550,
+                             'val_losses': legacy_data['vloss_list'], 'load_config': legacy_data['load_config'],
                              'low_pass': legacy_data['low_pass'], 'val_freq': legacy_data['val_freq'],
                              'device': legacy_data['pedal'], 'seg_length': legacy_data['seg_len'],
                              'learning_rate': legacy_data['learn_rate'], 'batch_size':legacy_data['batch_size'],
