@@ -59,3 +59,24 @@ class PreEmph(nn.Module):
             target = self.lp_filter(target)
 
         return output.permute(2, 0, 1), target.permute(2, 0, 1)
+
+class LossWrapper(nn.Module):
+    def __init__(self, losses, pre_filt=None):
+        super(LossWrapper, self).__init__()
+        loss_dict = {'ESR': ESRLoss(), 'DC': DCLoss()}
+        if pre_filt:
+            pre_filt = PreEmph(pre_filt)
+            loss_dict['ESRPre'] = lambda output, target: loss_dict['ESR'].forward(*pre_filt(output, target))
+        loss_functions = [[loss_dict[key], value] for key, value in losses.items()]
+
+        self.loss_functions = tuple([items[0] for items in loss_functions])
+        try:
+            self.loss_factors = tuple(torch.Tensor([items[1] for items in loss_functions]))
+        except IndexError:
+            self.loss_factors = torch.ones(len(self.loss_functions))
+
+    def forward(self, output, target):
+        loss = 0
+        for i, losses in enumerate(self.loss_functions):
+            loss += torch.mul(losses(output, target), self.loss_factors[i])
+        return loss

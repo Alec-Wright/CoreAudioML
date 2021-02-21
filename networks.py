@@ -27,7 +27,8 @@ class RecNet(nn.Module):
         self.block_types.update(dict.fromkeys(['RNN', 'LSTM', 'GRU'], BasicRNNBlock))
         self.skip = skip
         self.save_state = False
-        self.training_info = None
+        self.training_info = {'current_epoch': 0, 'training_losses': [], 'validation_losses': [],
+                              'epoch_times': [], 'best_val_loss': 1e12}
         # If layers were specified, create layers
         try:
             for each in blocks:
@@ -47,6 +48,10 @@ class RecNet(nn.Module):
     def detach_hidden(self):
         for each in self.layers:
             each.detach_hidden()
+
+    def reset_hidden(self):
+        for each in self.layers:
+            each.reset_hidden()
             
     # Add layer to the network, params is a dictionary contains the layer keyword arguments
     def add_layer(self, params):
@@ -60,11 +65,9 @@ class RecNet(nn.Module):
                                self.block_types[params['block_type']](params))
         self.output_size = params['output_size']
 
-    # Define forward pass
     def save_model(self, file_name, direc=''):
         if direc:
             miscfuncs.dir_check(direc)
-            file_name = direc + '/' + file_name
 
         model_data = {'model_data': {'model': 'RecNet', 'skip': 0}, 'blocks': {}}
         for i, each in enumerate(self.layers):
@@ -77,9 +80,9 @@ class RecNet(nn.Module):
             model_data['state_dict'] = model_state
 
         if self.training_info:
-            model_data['training_info'] = self.training_status
+            model_data['training_info'] = self.training_info
 
-        miscfuncs.json_save(model_data, file_name)
+        miscfuncs.json_save(model_data, file_name, direc)
 
 
 class BasicRNNBlock(nn.Module):
@@ -117,6 +120,9 @@ class BasicRNNBlock(nn.Module):
         else:
             self.hidden = self.hidden.clone().detach()
 
+    def reset_hidden(self):
+        self.hidden = None
+
 
 def load_model(model_data):
     model_types = {'RecNet': RecNet}
@@ -135,7 +141,7 @@ def load_model(model_data):
             state_dict[each] = torch.tensor(model_data['state_dict'][each])
         network.load_state_dict(state_dict)
 
-    if 'training_info' in model_data:
+    if 'training_info' in model_data.keys():
         network.training_info = model_data['training_info']
 
     return network
@@ -168,3 +174,32 @@ def legacy_load(legacy_data):
         return model_data
     else:
         print('format not recognised')
+
+
+# This function takes a directory as argument, looks for an existing model file called 'model.json' and loads a network
+# from it, after checking the network in 'model.json' matches the architecture described in args. If no model file is
+# found, it creates a network according to the specification in args.
+def init_model(save_path, args):
+    # Search for an existing model in the save directory
+    if miscfuncs.file_check('model.json', save_path) and args.load_model:
+        print('existing model file found, loading network')
+        model_data = miscfuncs.json_load('model', save_path)
+        # assertions to check that the model.json file is for the right neural network architecture
+        try:
+            assert len(model_data['blocks']) == 1
+            assert model_data['blocks']['0']['block_type'] == args.unit_type
+            assert model_data['blocks']['0']['input_size'] == args.input_size
+            assert model_data['blocks']['0']['hidden_size'] == args.hidden_size
+            assert model_data['blocks']['0']['output_size'] == args.output_size
+        except AssertionError:
+            print("model file found with network structure not matching config file structure")
+        network = load_model(model_data)
+    # If no existing model is found, create a new one
+    else:
+        print('no saved model found, creating new network')
+        block = {'block_type': args.unit_type, 'input_size': args.input_size,
+                 'output_size': args.output_size, 'hidden_size': args.hidden_size}
+        network = RecNet([block])
+        network.save_state = False
+        network.save_model('model', save_path)
+    return network

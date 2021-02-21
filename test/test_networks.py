@@ -6,20 +6,6 @@ import torch
 import os
 
 
-def run_net(network):
-    for n in range(3):
-        output = network(torch.ones([100, 10, network.input_size]))
-        target = torch.empty([100, 10, network.output_size])
-
-        assert output.size() == target.size()
-
-        optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
-        loss = torch.mean(torch.pow(torch.add(output, -target), 2))
-        loss.backward()
-        optimizer.step()
-        network.detach_hidden()
-
-
 class TestRecNet:
     def test_forward(self):
         block_params1 = {'block_type': 'RNN', 'input_size': 1, 'output_size': 1, 'hidden_size': 16}
@@ -72,13 +58,13 @@ class TestRecNet:
         network.save_model('TestModel_Stateful', 'test_model')
 
         del network
-        model_data1 = miscfuncs.json_load(os.path.join('test_model', 'TestModel_Stateful'))
+        model_data1 = miscfuncs.json_load('TestModel_Stateful', 'test_model')
         network = networks.load_model(model_data1)
         output2 = network(torch.ones([100, 10, network.input_size]))
         assert torch.all(torch.eq(output1, output2))
 
         del network
-        model_data2 = miscfuncs.json_load(os.path.join('test_model', 'TestModel_Stateless'))
+        model_data2 = miscfuncs.json_load('TestModel_Stateless', 'test_model')
         network = networks.load_model(model_data2)
         output3 = network(torch.ones([100, 10, network.input_size]))
         assert not torch.all(torch.eq(output1, output3))
@@ -88,7 +74,7 @@ class TestRecNet:
         os.rmdir('test_model')
 
     def test_network_loading(self):
-        network_params = miscfuncs.json_load(os.path.join('result_test', 'network1', 'config.json'))
+        network_params = miscfuncs.json_load('config.json', ['result_test', 'network1'])
         network_params['state_dict'] = torch.load(os.path.join('result_test', 'network1', 'modelBest.pt'),
                                                   map_location=torch.device('cpu'))
         model_data = networks.legacy_load(network_params)
@@ -109,4 +95,15 @@ class TestRecNet:
             assert abs(loss.item() - float(x[1:-1])) < 1e-5
 
 
+def run_net(network):
+    for n in range(3):
+        output = network(torch.ones([100, 10, network.input_size]))
+        target = torch.empty([100, 10, network.output_size])
 
+        assert output.size() == target.size()
+
+        optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
+        loss = torch.mean(torch.pow(torch.add(output, -target), 2))
+        loss.backward()
+        optimizer.step()
+        network.detach_hidden()
