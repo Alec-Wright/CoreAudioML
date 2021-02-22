@@ -81,7 +81,6 @@ class DataSet:
                                                                      "split markers"
         assert [self.subsets.get(each) for each in set_names], "set_names contains subsets that don't exist yet"
 
-
         # Load each of the 'extensions'
         for i, ext in enumerate(self.extensions):
             try:
@@ -89,7 +88,7 @@ class DataSet:
                 file_loc = file_loc + '.wav' if not file_loc.endswith('.wav') else file_loc
                 np_data = wavfile.read(file_loc)
             except FileNotFoundError:
-                file_loc = os.path.join(self.data_dir, file_loc + ext)
+                file_loc = os.path.join(self.data_dir, filename + ext)
                 file_loc = file_loc + '.wav' if not file_loc.endswith('.wav') else file_loc
                 np_data = wavfile.read(file_loc)
             except FileNotFoundError:

@@ -26,7 +26,7 @@ class RecNet(nn.Module):
         self.block_types = {}
         self.block_types.update(dict.fromkeys(['RNN', 'LSTM', 'GRU'], BasicRNNBlock))
         self.skip = skip
-        self.save_state = True
+        self.save_state = False
         self.training_info = {'current_epoch': 0, 'training_losses': [], 'validation_losses': [],
                               'train_epoch_av': 0.0, 'val_epoch_av': 0.0, 'total_time': 0.0, 'best_val_loss': 1e12}
         # If layers were specified, create layers
