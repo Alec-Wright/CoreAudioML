@@ -26,9 +26,9 @@ class RecNet(nn.Module):
         self.block_types = {}
         self.block_types.update(dict.fromkeys(['RNN', 'LSTM', 'GRU'], BasicRNNBlock))
         self.skip = skip
-        self.save_state = False
+        self.save_state = True
         self.training_info = {'current_epoch': 0, 'training_losses': [], 'validation_losses': [],
-                              'epoch_times': [], 'best_val_loss': 1e12}
+                              'train_epoch_av': 0.0, 'val_epoch_av': 0.0, 'total_time': 0.0, 'best_val_loss': 1e12}
         # If layers were specified, create layers
         try:
             for each in blocks:
@@ -73,14 +73,14 @@ class RecNet(nn.Module):
         for i, each in enumerate(self.layers):
             model_data['blocks'][str(i)] = each.params
 
+        if self.training_info:
+            model_data['training_info'] = self.training_info
+
         if self.save_state:
             model_state = self.state_dict()
             for each in model_state:
                 model_state[each] = model_state[each].tolist()
             model_data['state_dict'] = model_state
-
-        if self.training_info:
-            model_data['training_info'] = self.training_info
 
         miscfuncs.json_save(model_data, file_name, direc)
 
@@ -94,11 +94,12 @@ class BasicRNNBlock(nn.Module):
 
         rec_params = {i: params[i] for i in params if i in ['input_size', 'hidden_size', 'num_layers']}
         self.params = params
+        # This just calls nn.LSTM() if 'block_type' is LSTM, nn.GRU() if GRU, etc
         self.rec = wrapper(getattr(nn, params['block_type']), rec_params)
         self.lin_bias = params['lin_bias'] if 'lin_bias' in params else False
         self.lin = nn.Linear(params['hidden_size'], params['output_size'], self.lin_bias)
-
         self.hidden = None
+        # If the 'skip' param was provided, set to provided value (1 for skip connection, 0 otherwise), is 1 by default
         if 'skip' in params:
             self.skip = params['skip']
         else:
@@ -106,7 +107,8 @@ class BasicRNNBlock(nn.Module):
 
     def forward(self, x):
         if self.skip:
-            res = x[:, :, 0:self.lin.out_features]
+            # save the residual for the skip connection
+            res = x[:, :, 0:self.skip]
             x, self.hidden = self.rec(x, self.hidden)
             return self.lin(x) + res
         else:
