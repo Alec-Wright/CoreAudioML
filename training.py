@@ -80,3 +80,30 @@ class LossWrapper(nn.Module):
         for i, losses in enumerate(self.loss_functions):
             loss += torch.mul(losses(output, target), self.loss_factors[i])
         return loss
+
+
+class TrainTrack(dict):
+    def __init__(self):
+        self.update({'current_epoch': 0, 'training_losses': [], 'validation_losses': [], 'train_av_time': 0.0,
+                     'val_av_time': 0.0, 'total_time': 0.0, 'best_val_loss': 1e12, 'test_loss': 0})
+
+    def restore_data(self, training_info):
+        self.update(training_info)
+
+    def train_epoch_update(self, loss, ep_st_time, ep_end_time, init_time, current_ep):
+        if self['train_av_time']:
+            self['train_av_time'] = (self['train_av_time'] + ep_end_time - ep_st_time) / 2
+        else:
+            self['train_av_time'] = ep_end_time - ep_st_time
+        self['training_losses'].append(loss)
+        self['current_epoch'] = current_ep
+        self['total_time'] += ((init_time + ep_end_time - ep_st_time)/3600)
+
+    def val_epoch_update(self, loss, ep_st_time, ep_end_time):
+        if self['val_av_time']:
+            self['val_av_time'] = (self['val_av_time'] + ep_end_time - ep_st_time) / 2
+        else:
+            self['val_av_time'] = ep_end_time - ep_st_time
+        self['validation_losses'].append(loss)
+        if loss < self['best_val_loss']:
+            self['best_val_loss'] = loss

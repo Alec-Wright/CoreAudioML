@@ -2,19 +2,79 @@ import torch
 import torch.nn as nn
 import CoreAudioML.miscfuncs as miscfuncs
 
-
-def wrapper(func, kwargs):
+def wrapperkwargs(func, kwargs):
     return func(**kwargs)
 
+def wrapperargs(func, args):
+    return func(*args)
 
-# Recurrent Neural Network class, blocks is a list of layers, each layer is described by a dictionary, layers can also
-# be added after initialisation via the 'add_layer' function
+# A simple RNN class that consists of a single recurrent unit of type LSTM, GRU or Elman, followed by a fully connected
+# layer
 
-# params is a dict that holds 'meta parameters' for the whole network
-# skip inserts a skip connection from the input to the output, the value of skip determines how many of the input
-# channels to add to the output (if skip = 2, for example, the output must have at least two channels)
+class SimpleRNN(nn.Module):
+    def __init__(self, input_size=1, output_size=1, unit_type="LSTM", hidden_size=32, skip=1, bias_fl=True,
+                 num_layers=1):
+        super(SimpleRNN, self).__init__()
+        self.input_size = input_size
+        self.output_size = output_size
+        # Create dictionary of possible block types
+        self.rec = wrapperargs(getattr(nn, unit_type), [input_size, hidden_size, num_layers])
+        self.lin = nn.Linear(hidden_size, output_size, bias=bias_fl)
+        self.skip = skip
+        self.save_state = True
+        self.hidden = None
 
-# e.g blocks = {'block_type': 'RNN', 'input_size': 1, 'output_size': 1, 'hidden_size': 16}
+    def forward(self, x):
+        if self.skip:
+            # save the residual for the skip connection
+            res = x[:, :, 0:self.skip]
+            x, self.hidden = self.rec(x, self.hidden)
+            return self.lin(x) + res
+        else:
+            x, self.hidden = self.rec(x, self.hidden)
+            return self.lin(x)
+
+    # detach hidden state, this resets gradient tracking on the hidden state
+    def detach_hidden(self):
+        if self.hidden.__class__ == tuple:
+            self.hidden = tuple([h.clone().detach() for h in self.hidden])
+        else:
+            self.hidden = self.hidden.clone().detach()
+
+    # changes the hidden state to None, causing pytorch to create an all-zero hidden state when the rec unit is called
+    def reset_hidden(self):
+        self.hidden = None
+
+    # This functions saves the model and all its paraemters to a json file, so it can be loaded by a JUCE plugin
+    def save_model(self, file_name, direc=''):
+        if direc:
+            miscfuncs.dir_check(direc)
+        model_data = {'model_data': {'model': 'SimpleRNN', 'input_size': self.rec.input_size, 'skip': self.skip,
+                                     'output_size': self.lin.out_features, 'unit_type': self.rec._get_name(),
+                                     'num_layers': self.rec.num_layers, 'hidden_size': self.rec.hidden_size,
+                                     'bias_fl': True if any(self.lin.bias) else False}}
+        if self.save_state:
+            model_state = self.state_dict()
+            for each in model_state:
+                model_state[each] = model_state[each].tolist()
+            model_data['state_dict'] = model_state
+
+        miscfuncs.json_save(model_data, file_name, direc)
+
+
+""" 
+Recurrent Neural Network class, blocks is a list of layers, each layer is described by a dictionary, layers can also
+be added after initialisation via the 'add_layer' function
+
+params is a dict that holds 'meta parameters' for the whole network
+skip inserts a skip connection from the input to the output, the value of skip determines how many of the input
+channels to add to the output (if skip = 2, for example, the output must have at least two channels)
+
+e.g blocks = {'block_type': 'RNN', 'input_size': 1, 'output_size': 1, 'hidden_size': 16}
+
+This allows you to add an arbitrary number of RNN blocks. The SimpleRNN is easier to use but only includes one reccurent
+unit followed by a fully connect layer.
+"""
 class RecNet(nn.Module):
     def __init__(self, blocks=None, skip=0):
         super(RecNet, self).__init__()
@@ -95,7 +155,7 @@ class BasicRNNBlock(nn.Module):
         rec_params = {i: params[i] for i in params if i in ['input_size', 'hidden_size', 'num_layers']}
         self.params = params
         # This just calls nn.LSTM() if 'block_type' is LSTM, nn.GRU() if GRU, etc
-        self.rec = wrapper(getattr(nn, params['block_type']), rec_params)
+        self.rec = wrapperkwargs(getattr(nn, params['block_type']), rec_params)
         self.lin_bias = params['lin_bias'] if 'lin_bias' in params else False
         self.lin = nn.Linear(params['hidden_size'], params['output_size'], self.lin_bias)
         self.hidden = None
@@ -127,24 +187,33 @@ class BasicRNNBlock(nn.Module):
 
 
 def load_model(model_data):
-    model_types = {'RecNet': RecNet}
+    model_types = {'RecNet': RecNet, 'SimpleRNN': SimpleRNN}
 
     model_meta = model_data.pop('model_data')
-    model_meta['blocks'] = []
 
-    network = wrapper(model_types[model_meta.pop('model')], model_meta)
-    for i in range(len(model_data['blocks'])):
-        network.add_layer(model_data['blocks'][str(i)])
+    if model_meta['model'] == 'SimpleRNN':
+        network = wrapperkwargs(model_types[model_meta.pop('model')], model_meta)
+        if 'state_dict' in model_data:
+            state_dict = network.state_dict()
+            for each in model_data['state_dict']:
+                state_dict[each] = torch.tensor(model_data['state_dict'][each])
+            network.load_state_dict(state_dict)
 
-    # Get the state dict from the newly created model and load the saved states, if states were saved
-    if 'state_dict' in model_data:
-        state_dict = network.state_dict()
-        for each in model_data['state_dict']:
-            state_dict[each] = torch.tensor(model_data['state_dict'][each])
-        network.load_state_dict(state_dict)
+    elif model_meta['model'] == 'RecNet':
+        model_meta['blocks'] = []
+        network = wrapperkwargs(model_types[model_meta.pop('model')], model_meta)
+        for i in range(len(model_data['blocks'])):
+            network.add_layer(model_data['blocks'][str(i)])
 
-    if 'training_info' in model_data.keys():
-        network.training_info = model_data['training_info']
+        # Get the state dict from the newly created model and load the saved states, if states were saved
+        if 'state_dict' in model_data:
+            state_dict = network.state_dict()
+            for each in model_data['state_dict']:
+                state_dict[each] = torch.tensor(model_data['state_dict'][each])
+            network.load_state_dict(state_dict)
+
+        if 'training_info' in model_data.keys():
+            network.training_info = model_data['training_info']
 
     return network
 
@@ -160,7 +229,7 @@ def legacy_load(legacy_data):
                              'val_losses': legacy_data['vloss_list'], 'load_config': legacy_data['load_config'],
                              'low_pass': legacy_data['low_pass'], 'val_freq': legacy_data['val_freq'],
                              'device': legacy_data['pedal'], 'seg_length': legacy_data['seg_len'],
-                             'learning_rate': legacy_data['learn_rate'], 'batch_size':legacy_data['batch_size'],
+                             'learning_rate': legacy_data['learn_rate'], 'batch_size': legacy_data['batch_size'],
                              'loss_func': legacy_data['loss_fcn'], 'update_freq': legacy_data['up_fr'],
                              'init_length': legacy_data['init_len'], 'pre_filter': legacy_data['pre_filt']}
             model_data['training_info'] = training_info
@@ -176,32 +245,3 @@ def legacy_load(legacy_data):
         return model_data
     else:
         print('format not recognised')
-
-
-# This function takes a directory as argument, looks for an existing model file called 'model.json' and loads a network
-# from it, after checking the network in 'model.json' matches the architecture described in args. If no model file is
-# found, it creates a network according to the specification in args.
-def init_model(save_path, args):
-    # Search for an existing model in the save directory
-    if miscfuncs.file_check('model.json', save_path) and args.load_model:
-        print('existing model file found, loading network')
-        model_data = miscfuncs.json_load('model', save_path)
-        # assertions to check that the model.json file is for the right neural network architecture
-        try:
-            assert len(model_data['blocks']) == 1
-            assert model_data['blocks']['0']['block_type'] == args.unit_type
-            assert model_data['blocks']['0']['input_size'] == args.input_size
-            assert model_data['blocks']['0']['hidden_size'] == args.hidden_size
-            assert model_data['blocks']['0']['output_size'] == args.output_size
-        except AssertionError:
-            print("model file found with network structure not matching config file structure")
-        network = load_model(model_data)
-    # If no existing model is found, create a new one
-    else:
-        print('no saved model found, creating new network')
-        block = {'block_type': args.unit_type, 'input_size': args.input_size,
-                 'output_size': args.output_size, 'hidden_size': args.hidden_size}
-        network = RecNet([block])
-        network.save_state = False
-        network.save_model('model', save_path)
-    return network

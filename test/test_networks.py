@@ -1,9 +1,49 @@
+from unittest import TestCase
+
 import CoreAudioML.networks as networks
 import CoreAudioML.dataset as dataset
 import CoreAudioML.miscfuncs as miscfuncs
 import CoreAudioML.training as training
 import torch
 import os
+
+
+def run_net(network):
+    for n in range(3):
+        output = network(torch.ones([100, 10, network.input_size]))
+        target = torch.empty([100, 10, network.output_size])
+
+        assert output.size() == target.size()
+
+        optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
+        loss = torch.mean(torch.pow(torch.add(output, -target), 2))
+        loss.backward()
+        optimizer.step()
+        network.detach_hidden()
+
+def model_save_test(network):
+    output1 = network(torch.ones([100, 10, network.input_size]))
+    network.save_state = True
+    network.save_model('TestModel_Stateful', 'test_model')
+    network.save_state = False
+    network.save_model('TestModel_Stateless', 'test_model')
+
+    del network
+    model_data1 = miscfuncs.json_load('TestModel_Stateful', 'test_model')
+    network = networks.load_model(model_data1)
+    output2 = network(torch.ones([100, 10, network.input_size]))
+    assert torch.all(torch.eq(output1, output2))
+
+    del network
+    model_data2 = miscfuncs.json_load('TestModel_Stateless', 'test_model')
+    network = networks.load_model(model_data2)
+    output3 = network(torch.ones([100, 10, network.input_size]))
+    assert not torch.all(torch.eq(output1, output3))
+
+    os.remove(os.path.join("test_model", "TestModel_Stateful.json"))
+    os.remove(os.path.join("test_model", "TestModel_Stateless.json"))
+    os.rmdir('test_model')
+
 
 
 class TestRecNet:
@@ -23,8 +63,9 @@ class TestRecNet:
         network3 = networks.RecNet([block_params4, block_params5])
         run_net(network3)
 
-        network4 = networks.RecNet({'block_type': 'RNN', 'input_size': 4, 'output_size': 8, 'hidden_size': 8, 'skip':0},
-                                   skip=1)
+        network4 = networks.RecNet(
+            {'block_type': 'RNN', 'input_size': 4, 'output_size': 8, 'hidden_size': 8, 'skip': 0},
+            skip=1)
         run_net(network4)
 
     def test_detach_hidden(self):
@@ -51,27 +92,8 @@ class TestRecNet:
         block_params1 = {'block_type': 'RNN', 'input_size': 1, 'output_size': 1, 'hidden_size': 16}
         block_params2 = {'block_type': 'GRU', 'input_size': 1, 'output_size': 1, 'hidden_size': 16}
         network = networks.RecNet([block_params1, block_params2])
-        output1 = network(torch.ones([100, 10, network.input_size]))
+        model_save_test(network)
 
-        network.save_model('TestModel_Stateless', 'test_model')
-        network.save_state = True
-        network.save_model('TestModel_Stateful', 'test_model')
-
-        del network
-        model_data1 = miscfuncs.json_load('TestModel_Stateful', 'test_model')
-        network = networks.load_model(model_data1)
-        output2 = network(torch.ones([100, 10, network.input_size]))
-        assert torch.all(torch.eq(output1, output2))
-
-        del network
-        model_data2 = miscfuncs.json_load('TestModel_Stateless', 'test_model')
-        network = networks.load_model(model_data2)
-        output3 = network(torch.ones([100, 10, network.input_size]))
-        assert not torch.all(torch.eq(output1, output3))
-
-        os.remove(os.path.join("test_model", "TestModel_Stateful.json"))
-        os.remove(os.path.join("test_model", "TestModel_Stateless.json"))
-        os.rmdir('test_model')
 
     def test_network_loading(self):
         network_params = miscfuncs.json_load('config.json', ['result_test', 'network1'])
@@ -95,15 +117,34 @@ class TestRecNet:
             assert abs(loss.item() - float(x[1:-1])) < 1e-5
 
 
-def run_net(network):
-    for n in range(3):
-        output = network(torch.ones([100, 10, network.input_size]))
-        target = torch.empty([100, 10, network.output_size])
+class TestSimpleRNN(TestCase):
+    def test_forward(self):
+        network = networks.SimpleRNN(input_size=1, output_size=1, unit_type="LSTM", hidden_size=32, skip=1,
+                                     bias_fl=True, num_layers=1)
+        run_net(network)
 
-        assert output.size() == target.size()
+        network = networks.SimpleRNN(input_size=2, output_size=4, unit_type="GRU", hidden_size=16, skip=0,
+                                     bias_fl=False, num_layers=1)
+        run_net(network)
 
-        optimizer = torch.optim.Adam(network.parameters(), lr=0.001)
-        loss = torch.mean(torch.pow(torch.add(output, -target), 2))
-        loss.backward()
-        optimizer.step()
-        network.detach_hidden()
+        network = networks.SimpleRNN(input_size=1, output_size=2, unit_type="RNN", hidden_size=16, skip=1,
+                                     bias_fl=True, num_layers=2)
+        run_net(network)
+
+    def test_save_model(self):
+        network = networks.SimpleRNN(input_size=1, output_size=1, unit_type='LSTM', hidden_size=8, skip=1)
+        model_save_test(network)
+        del network
+
+        network = networks.SimpleRNN(input_size=1, output_size=1, unit_type='LSTM', hidden_size=8, skip=0)
+        model_save_test(network)
+        del network
+
+        network = networks.SimpleRNN(input_size=1, output_size=1, unit_type='GRU', num_layers=2, skip=1)
+        model_save_test(network)
+        del network
+
+        network = networks.SimpleRNN(input_size=5, output_size=2, unit_type='GRU', num_layers=2, skip=2)
+        model_save_test(network)
+        del network
+
