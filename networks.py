@@ -109,7 +109,7 @@ class SimpleRNN(nn.Module):
 
     # only proc processes a the input data and calculates the loss, optionally grad can be tracked or not
     def process_data(self, input_data, target_data, loss_fcn, chunk, grad=False):
-        with (torch.no_grad() if grad else nullcontext()):
+        with (torch.no_grad() if not grad else nullcontext()):
             output = torch.empty_like(target_data)
             for l in range(int(output.size()[0] / chunk)):
                 output[l * chunk:(l + 1) * chunk] = self(input_data[l * chunk:(l + 1) * chunk])
