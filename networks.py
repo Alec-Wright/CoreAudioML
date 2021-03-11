@@ -81,12 +81,13 @@ class RecNet(nn.Module):
         if type(blocks) == dict:
             blocks = [blocks]
         # Create container for layers
-        self.layers = torch.nn.Sequential()
+        self.layers = nn.Sequential()
         # Create dictionary of possible block types
         self.block_types = {}
         self.block_types.update(dict.fromkeys(['RNN', 'LSTM', 'GRU'], BasicRNNBlock))
         self.skip = skip
         self.save_state = False
+        self.input_size = None
         self.training_info = {'current_epoch': 0, 'training_losses': [], 'validation_losses': [],
                               'train_epoch_av': 0.0, 'val_epoch_av': 0.0, 'total_time': 0.0, 'best_val_loss': 1e12}
         # If layers were specified, create layers
@@ -116,9 +117,9 @@ class RecNet(nn.Module):
     # Add layer to the network, params is a dictionary contains the layer keyword arguments
     def add_layer(self, params):
         # If this is the first layer, define the network input size
-        try:
-            self.input_size
-        except torch.nn.modules.module.ModuleAttributeError:
+        if self.input_size:
+            pass
+        else:
             self.input_size = params['input_size']
 
         self.layers.add_module('block_'+str(1 + len(list(self.layers.children()))),
