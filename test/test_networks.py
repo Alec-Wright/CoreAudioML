@@ -127,6 +127,14 @@ class TestSimpleRNN(TestCase):
                                      bias_fl=False, num_layers=1)
         run_net(network)
 
+        network = networks.SimpleRNN(input_size=1, output_size=1, unit_type="GRU", hidden_size=16, skip=0,
+                                     bias_fl=False, num_layers=1)
+        run_net(network)
+
+        network = networks.SimpleRNN(input_size=1, output_size=1, unit_type="GRU", hidden_size=1, skip=0,
+                                     bias_fl=False, num_layers=1)
+        run_net(network)
+
         network = networks.SimpleRNN(input_size=1, output_size=2, unit_type="RNN", hidden_size=16, skip=1,
                                      bias_fl=True, num_layers=2)
         run_net(network)
@@ -141,6 +149,10 @@ class TestSimpleRNN(TestCase):
         del network
 
         network = networks.SimpleRNN(input_size=1, output_size=1, unit_type='GRU', num_layers=2, skip=1)
+        model_save_test(network)
+        del network
+
+        network = networks.SimpleRNN(input_size=1, output_size=1, unit_type='GRU', num_layers=2, skip=1, bias_fl=False)
         model_save_test(network)
         del network
 
