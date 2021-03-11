@@ -52,7 +52,7 @@ class SimpleRNN(nn.Module):
         model_data = {'model_data': {'model': 'SimpleRNN', 'input_size': self.rec.input_size, 'skip': self.skip,
                                      'output_size': self.lin.out_features, 'unit_type': self.rec._get_name(),
                                      'num_layers': self.rec.num_layers, 'hidden_size': self.rec.hidden_size,
-                                     'bias_fl': True if any(self.lin.bias) else False}}
+                                     'bias_fl': True if self.lin.bias else False}}
         if self.save_state:
             model_state = self.state_dict()
             for each in model_state:
