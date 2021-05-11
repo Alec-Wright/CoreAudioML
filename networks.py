@@ -123,6 +123,127 @@ class SimpleRNN(nn.Module):
 
 
 """ 
+Gated Convolutional Neural Net class, based on the 'WaveNet' architecture, takes a single channel of audio as input and
+produces a single channel of audio of equal length as output. one-sided zero-padding is used to ensure the network is 
+causal and doesn't reduce the length of the audio.
+
+Made up of 'blocks', each one applying a series of dilated convolutions, with the dilation of each successive layer 
+increasing by a factor of 'dilation_growth'. 'layers' determines how many convolutional layers are in each block,
+'kernel_size' is the size of the filters. Channels is the number of convolutional channels.
+
+The output of the model is creating by the linear mixer, which sums weighted outputs from each of the layers in the 
+model
+
+"""
+
+
+class GatedConvNet(nn.Module):
+    def __init__(self, channels=8, blocks=2, layers=9, dilation_growth=2, kernel_size=3):
+        super(GatedConvNet, self).__init__()
+        # Set number of layers  and hidden_size for network layer/s
+        self.layers = layers
+        self.kernel_size = kernel_size
+        self.dilation_growth = dilation_growth
+        self.channels = channels
+        self.blocks = nn.ModuleList()
+        for b in range(blocks):
+            self.blocks.append(ResConvBlock1DCausalGated(1 if b == 0 else channels, channels, dilation_growth,
+                                                         kernel_size, layers))
+        self.blocks.append(nn.Conv1d(channels*layers*blocks, 1, 1, 1, 0))
+
+    def forward(self, x):
+        x = x.permute(1, 2, 0)
+        z = torch.empty([x.shape[0], self.blocks[-1].in_channels, x.shape[2]])
+        for n, block in enumerate(self.blocks[:-1]):
+            x, zn = block(x)
+            z[:, n*self.channels*self.layers:(n + 1) * self.channels*self.layers, :] = zn
+        return self.blocks[-1](z).permute(2, 0, 1)
+
+    # train_epoch runs one epoch of training
+    def train_epoch(self, input_data, target_data, loss_fcn, optim, bs):
+        # shuffle the segments at the start of the epoch
+        shuffle = torch.randperm(input_data.shape[1])
+
+        # Iterate over the batches
+        ep_loss = 0
+        for batch_i in range(math.ceil(shuffle.shape[0] / bs)):
+            # Load batch of shuffled segments
+            input_batch = input_data[:, shuffle[batch_i * bs:(batch_i + 1) * bs], :]
+            target_batch = target_data[:, shuffle[batch_i * bs:(batch_i + 1) * bs], :]
+
+            # Process batch
+            output = self(input_batch)
+
+            # Calculate loss and update network parameters
+            loss = loss_fcn(output, target_batch)
+            loss.backward()
+            optim.step()
+
+            # Add the average batch loss to the epoch loss and reset the hidden states to zeros
+            ep_loss += loss
+
+        return ep_loss / (batch_i + 1)
+
+    # only proc processes a the input data and calculates the loss, optionally grad can be tracked or not
+    def process_data(self, input_data, target_data, loss_fcn, grad=False):
+        with (torch.no_grad() if not grad else nullcontext()):
+            output = self(input_data)
+            loss = loss_fcn(output, target_data)
+        return output, loss
+
+
+""" 
+Gated convolutional neural net block, applies successive gated convolutional layers to the input, a total of 'layers'
+layers are applied, with the filter size 'kernel_size' and the dilation increasing by a factor of 'dilation_growth' for
+ each successive layer."""
+
+
+class ResConvBlock1DCausalGated(nn.Module):
+    def __init__(self, chan_input, chan_output, dilation_growth, kernel_size, layers):
+        super(ResConvBlock1DCausalGated, self).__init__()
+        self.channels = chan_output
+
+        dilations = [dilation_growth ** lay for lay in range(layers)]
+        self.layers = nn.ModuleList()
+
+        for dil in dilations:
+            self.layers.append(ResConvLayer1DCausalGated(chan_input, chan_output, dil, kernel_size))
+            chan_input = chan_output
+
+    def forward(self, x):
+        z = torch.empty([x.shape[0], len(self.layers)*self.channels, x.shape[2]])
+        for n, layer in enumerate(self.layers):
+            x, zn = layer(x)
+            z[:, n*self.channels:(n + 1) * self.channels, :] = zn
+        return x, z
+
+
+""" 
+Gated convolutional layer, zero pads and then applies a causal convolution to the input """
+
+
+class ResConvLayer1DCausalGated(nn.Module):
+
+    def __init__(self, chan_input, chan_output, dilation, kernel_size):
+        super(ResConvLayer1DCausalGated, self).__init__()
+        self.channels = chan_output
+
+        self.conv = nn.Conv1d(in_channels=chan_input, out_channels=chan_output * 2, kernel_size=kernel_size, stride=1,
+                              padding=0, dilation=dilation)
+        self.mix = nn.Conv1d(in_channels=chan_output, out_channels=chan_output, kernel_size=1, stride=1, padding=0)
+
+    def forward(self, x):
+        residual = x
+        y = self.conv(x)
+        z = torch.tanh(y[:, 0:self.channels, :]) * torch.sigmoid(y[:, self.channels:, :])
+
+        # Zero pad on the left side, so that z is the same length as x
+        z = torch.cat((torch.zeros(residual.shape[0], self.channels, residual.shape[2]-z.shape[2]), z), dim=2)
+        x = self.mix(z) + residual
+        return x, z
+
+
+""" 
 Recurrent Neural Network class, blocks is a list of layers, each layer is described by a dictionary, layers can also
 be added after initialisation via the 'add_layer' function
 
