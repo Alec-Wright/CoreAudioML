@@ -168,6 +168,7 @@ class GatedConvNet(nn.Module):
         ep_loss = 0
         for batch_i in range(math.ceil(shuffle.shape[0] / bs)):
             # Load batch of shuffled segments
+            self.zero_grad()
             input_batch = input_data[:, shuffle[batch_i * bs:(batch_i + 1) * bs], :]
             target_batch = target_data[:, shuffle[batch_i * bs:(batch_i + 1) * bs], :]
 
@@ -190,6 +191,22 @@ class GatedConvNet(nn.Module):
             output = self(input_data)
             loss = loss_fcn(output, target_data)
         return output, loss
+
+    # This functions saves the model and all its paraemters to a json file, so it can be loaded by a JUCE plugin
+    def save_model(self, file_name, direc=''):
+        if direc:
+            miscfuncs.dir_check(direc)
+        model_data = {'model_data': {'model': 'GatedConvNet', 'layers': self.layers, 'channels': self.channels,
+                                     'dilation_growth': self.dilation_growth, 'kernel_size': self.kernel_size,
+                                     'blocks': len(self.blocks) - 1 }}
+
+        if self.save_state:
+            model_state = self.state_dict()
+            for each in model_state:
+                model_state[each] = model_state[each].tolist()
+            model_data['state_dict'] = model_state
+
+        miscfuncs.json_save(model_data, file_name, direc)
 
 
 """ 
@@ -369,11 +386,11 @@ class BasicRNNBlock(nn.Module):
 
 
 def load_model(model_data):
-    model_types = {'RecNet': RecNet, 'SimpleRNN': SimpleRNN}
+    model_types = {'RecNet': RecNet, 'SimpleRNN': SimpleRNN, 'GatedConvNet': GatedConvNet}
 
     model_meta = model_data.pop('model_data')
 
-    if model_meta['model'] == 'SimpleRNN':
+    if model_meta['model'] == 'SimpleRNN' or model_meta['model'] == 'GatedConvNet':
         network = wrapperkwargs(model_types[model_meta.pop('model')], model_meta)
         if 'state_dict' in model_data:
             state_dict = network.state_dict()
