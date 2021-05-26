@@ -39,3 +39,10 @@ def json_load(file_name, dir_name=''):
     with open(full_path) as fp:
         return json.load(fp)
 
+
+def load_config(args):
+    # Load the configs and write them onto the args dictionary, this will add new args and/or overwrite old ones
+    configs = json_load(args.load_config, args.config_location)
+    for parameters in configs:
+        args.__setattr__(parameters, configs[parameters])
+    return args
