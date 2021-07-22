@@ -192,7 +192,7 @@ class GatedConvNet(nn.Module):
             loss = loss_fcn(output, target_data)
         return output, loss
 
-    # This functions saves the model and all its paraemters to a json file, so it can be loaded by a JUCE plugin
+    # This functions saves the model and all its parameters to a json file, so it can be loaded by a JUCE plugin
     def save_model(self, file_name, direc=''):
         if direc:
             miscfuncs.dir_check(direc)
