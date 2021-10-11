@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 # ESR loss calculates the Error-to-signal between the output/target
 class ESRLoss(nn.Module):
@@ -27,6 +28,41 @@ class DCLoss(nn.Module):
         energy = torch.mean(torch.pow(target, 2)) + self.epsilon
         loss = torch.div(loss, energy)
         return loss
+
+# ESR loss calculates the Error-to-signal between the output/target
+class MultiSpecLoss(nn.Module):
+    def __init__(self, fft_sizes=(2048, 1024, 512, 256, 128)):
+        super(MultiSpecLoss, self).__init__()
+        self.epsilon = 0.00001
+        self.fft_sizes = fft_sizes
+        self.spec_loss = []
+        for size in self.fft_sizes:
+            hop = size//4
+            self.spec_loss.append(SpecLoss(size, hop))
+
+    def forward(self, output, target):
+        output = output.squeeze()
+        target = target.squeeze()
+        total_loss = 0
+        for item in self.spec_loss:
+            total_loss += item(output, target)
+        return total_loss/len(self.fft_sizes)
+
+class SpecLoss(nn.Module):
+    def __init__(self, fft_size=512, hop_size=128):
+        super(SpecLoss, self).__init__()
+        self.epsilon = 0.00001
+        self.fft_size = fft_size
+        self.hop_size = hop_size
+
+    def forward(self, output, target):
+        magx = torch.abs(torch.stft(output, n_fft=self.fft_size, hop_length=self.hop_size, return_complex=True))
+        magy = torch.abs(torch.stft(target, n_fft=self.fft_size, hop_length=self.hop_size, return_complex=True))
+
+        logx = torch.log(torch.where(magx <= self.epsilon, torch.Tensor([self.epsilon]).to(output.device), magx))
+        logy = torch.log(torch.where(magy <= self.epsilon, torch.Tensor([self.epsilon]).to(output.device), magy))
+
+        return F.l1_loss(magx, magy) + F.l1_loss(logx, logy)
 
 
 # PreEmph is a class that applies an FIR pre-emphasis filter to the signal, the filter coefficients are in the
