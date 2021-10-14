@@ -146,6 +146,7 @@ class GatedConvNet(nn.Module):
         self.dilation_growth = dilation_growth
         self.channels = channels
         self.blocks = nn.ModuleList()
+        self.save_state = True
         for b in range(blocks):
             self.blocks.append(ResConvBlock1DCausalGated(1 if b == 0 else channels, channels, dilation_growth,
                                                          kernel_size, layers))
@@ -198,7 +199,7 @@ class GatedConvNet(nn.Module):
             miscfuncs.dir_check(direc)
         model_data = {'model_data': {'model': 'GatedConvNet', 'layers': self.layers, 'channels': self.channels,
                                      'dilation_growth': self.dilation_growth, 'kernel_size': self.kernel_size,
-                                     'blocks': len(self.blocks) - 1 }}
+                                     'blocks': len(self.blocks) - 1}}
 
         if self.save_state:
             model_state = self.state_dict()
