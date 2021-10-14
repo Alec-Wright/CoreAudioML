@@ -138,7 +138,7 @@ model
 
 
 class GatedConvNet(nn.Module):
-    def __init__(self, channels=8, blocks=2, layers=9, dilation_growth=2, kernel_size=3):
+    def __init__(self, channels=8, blocks=2, layers=9, dilation_growth=2, kernel_size=3, RNN_Input=True):
         super(GatedConvNet, self).__init__()
         # Set number of layers  and hidden_size for network layer/s
         self.layers = layers
@@ -147,18 +147,23 @@ class GatedConvNet(nn.Module):
         self.channels = channels
         self.blocks = nn.ModuleList()
         self.save_state = True
+        self.RNN_Input = RNN_Input
         for b in range(blocks):
             self.blocks.append(ResConvBlock1DCausalGated(1 if b == 0 else channels, channels, dilation_growth,
                                                          kernel_size, layers))
         self.blocks.append(nn.Conv1d(channels*layers*blocks, 1, 1, 1, 0))
 
     def forward(self, x):
-        x = x.permute(1, 2, 0)
+        if self.RNN_Input:
+            x = x.permute(1, 2, 0)
         z = torch.empty([x.shape[0], self.blocks[-1].in_channels, x.shape[2]])
         for n, block in enumerate(self.blocks[:-1]):
             x, zn = block(x)
             z[:, n*self.channels*self.layers:(n + 1) * self.channels*self.layers, :] = zn
-        return self.blocks[-1](z).permute(2, 0, 1)
+        output = self.blocks[-1](z)
+        if self.RNN_Input:
+            output = output.permute(2, 0, 1)
+        return output
 
     # train_epoch runs one epoch of training
     def train_epoch(self, input_data, target_data, loss_fcn, optim, bs):
