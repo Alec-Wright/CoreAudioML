@@ -62,7 +62,7 @@ class SpecLoss(nn.Module):
         logx = torch.log(torch.where(magx <= self.epsilon, torch.Tensor([self.epsilon]).to(output.device), magx))
         logy = torch.log(torch.where(magy <= self.epsilon, torch.Tensor([self.epsilon]).to(output.device), magy))
 
-        return F.l1_loss(magx, magy) + F.l1_loss(logx, logy)
+        return F.mse_loss(magx, magy) + F.mse_loss(logx, logy)
 
 
 # PreEmph is a class that applies an FIR pre-emphasis filter to the signal, the filter coefficients are in the
