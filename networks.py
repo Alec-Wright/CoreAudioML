@@ -250,18 +250,20 @@ class ResConvLayer1DCausalGated(nn.Module):
     def __init__(self, chan_input, chan_output, dilation, kernel_size):
         super(ResConvLayer1DCausalGated, self).__init__()
         self.channels = chan_output
+        self.in_chan = chan_input
 
         self.conv = nn.Conv1d(in_channels=chan_input, out_channels=chan_output * 2, kernel_size=kernel_size, stride=1,
                               padding=0, dilation=dilation)
         self.mix = nn.Conv1d(in_channels=chan_output, out_channels=chan_output, kernel_size=1, stride=1, padding=0)
 
+        self.zpad = (kernel_size-1)*dilation
+
     def forward(self, x):
         residual = x
-        y = self.conv(x)
+        # Zero pad on the left side, so that y is the same length as x
+        y = self.conv(torch.cat((torch.zeros(x.shape[0], self.in_chan, self.zpad), x), dim=2))
         z = torch.tanh(y[:, 0:self.channels, :]) * torch.sigmoid(y[:, self.channels:, :])
 
-        # Zero pad on the left side, so that z is the same length as x
-        z = torch.cat((torch.zeros(residual.shape[0], self.channels, residual.shape[2]-z.shape[2]), z), dim=2)
         x = self.mix(z) + residual
         return x, z
 
