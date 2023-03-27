@@ -10,6 +10,12 @@ import os
 def audio_converter(audio):
     if audio.dtype == 'int16':
         return audio.astype(np.float32, order='C') / 32768.0
+    elif audio.dtype == 'int32':
+        return audio.astype(np.float32, order='C') / (2**31-1)
+    elif audio.dtype == 'float32':
+        return audio.astype(np.float32, order='C')
+    elif audio.dtype == 'float64':
+        return audio.astype(np.float32, order='C')
     else:
         print('unimplemented audio data type conversion...')
 
